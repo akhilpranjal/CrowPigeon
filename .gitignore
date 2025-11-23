@@ -1,0 +1,29 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual env
+myvenv/
+env/
+.venv/
+
+# Django stuff
+*.log
+db.sqlite3
+media/
+staticfiles/
+
+# Environment variables
+.env
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Test / type hints cache
+.pytest_cache/
+.mypy_cache/
+.coverage
+*.pyc
