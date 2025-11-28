@@ -27,3 +27,5 @@ staticfiles/
 .mypy_cache/
 .coverage
 *.pyc
+
+migrations/
