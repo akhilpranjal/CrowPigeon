@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2>Room: {{room.name}}</h2>
+    <form method="POST">
+      <div>
+        {% for message in messages %}
+        <p><b>{{message.user}}: </b> {{message.content}}</p>
+        {% endfor %}
+      </div>
+      
+      <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="message" placeholder="Type Message">
+        <button type="submit">Send</button>
+      </form>
+    </form>
+  </body>
+</html>
