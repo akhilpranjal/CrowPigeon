@@ -29,3 +29,5 @@ staticfiles/
 *.pyc
 
 migrations/
+
+plan.md
