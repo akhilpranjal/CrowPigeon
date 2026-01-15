@@ -8,9 +8,11 @@
     <form method="POST">
       {% csrf_token %}
       <label >Username</label>
-      <input type="text" name="username" id="Username">
+      <input type="text" name="username" placeholder="Username">
       <label >Room Name</label>
-      <input type="text" name="room" id="Room">
+      <input type="text" name="room" placeholder="Room Name">
+      <label >Password</label>
+      <input type="password" name="password" placeholder="Room Password" required>
       <button type="submit">Enter</button>
     </form>
   </body>
