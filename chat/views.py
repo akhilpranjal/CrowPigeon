@@ -89,6 +89,15 @@ def room(request):
 
     chat_room = Room.objects.get(name=request.session['room'])
 
+    is_member = RoomMember.objects.filter(
+        room=room,
+        session_key=request.session.session_key,
+        status='approved'
+    ).exists()
+
+    if not is_member:
+        return redirect('waiting')
+
     if request.method=='POST':
         content = request.POST.get('message')
         Message.objects.create(
