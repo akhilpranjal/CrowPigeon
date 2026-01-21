@@ -58,6 +58,29 @@ def home(request):
     return render(request, 'home.html')
 
 
+
+def waiting(request):
+    room_name = request.session.get('room')
+
+    if not room_name:
+        return redirect('/')
+    
+    room = Room.objects.get(name=room_name)
+
+    member = RoomMember.objects.get(
+        room=room,
+        session_key=request.session.session_key
+    )
+
+    if member.status == 'approved':
+        return redirect('room')
+    if member.status == 'rejected':
+        return render(request, 'waiting.html', {'rejected': True})
+    
+    return render(request, 'waiting.html')
+
+
+
 def room(request):
 
     if 'username' not in request.session or 'room' not in request.session:
