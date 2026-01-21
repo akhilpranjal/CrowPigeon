@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Waiting for Approval</title>
+    <meta http-equiv="refresh" content="5">
+</head>
+<body>
+    {% if rejected %}
+        <h2>Your request was rejected.</h2>
+        <a href="/">Go Home</a>
+    {% else %}
+        <h2>Waiting for room owner approval...</h2>
+        <p>This page refreshes every 5 seconds.</p>
+    {% endif %}
+</body>
+</html>
