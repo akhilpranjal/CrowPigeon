@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inbox</title>
+</head>
+<body>
+    <h2>Join Requests</h2>
+
+    {% if requests %}
+        <ul>
+            {% for req in requests %}
+                <li>
+                    <b>{{ req.username }}</b> wants to join <b>{{ req.room.name }}</b>
+                    <br>
+                    <a href="{% url 'approve' req.id %}">Approve</a> |
+                    <a href="{% url 'reject' req.id %}">Reject</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No pending requests.</p>
+    {% endif %}
+
+    <a href="/">Home</a>
+</body>
+</html>
