@@ -5,7 +5,18 @@ from django.contrib.auth.hashers import make_password, check_password
 
 # Create your views here.
 
+def is_approved_member(request, room):
+    return RoomMember.objects.filter(
+        room=room,
+        session_key=request.session.session_key,
+        status='approved'
+    ).exists()
+
+
 def home(request):
+    if not request.session.session_key:
+        request.session.create()
+
     if request.method == "POST":
         username = request.POST.get('username')
         room_name = request.POST.get('room')
@@ -16,10 +27,7 @@ def home(request):
         room = Room.objects.filter(name=room_name).first()
 
         if room is None:
-            if not request.session.session_key:
-                request.session.create()
-
-            Room.objects.create(
+            room = Room.objects.create(
                 name = room_name,
                 password = make_password(password),
                 owner_session = request.session.session_key
@@ -35,6 +43,7 @@ def home(request):
 
             request.session['room'] = room.name
             return redirect('room')
+        
         else:
             if (check_password(password, room.password)):
                 RoomMember.objects.get_or_create(
@@ -46,15 +55,14 @@ def home(request):
                     }
                 )
 
-
                 request.session['room'] = room.name
                 return redirect('waiting')
+            
             else:
                 return render(request, 'home.html', {
                     'error': 'Wrong room password' 
                 })
 
-    
     return render(request, 'home.html')
 
 
@@ -89,22 +97,21 @@ def room(request):
 
     chat_room = Room.objects.get(name=request.session['room'])
 
-    is_member = RoomMember.objects.filter(
-        room=room,
-        session_key=request.session.session_key,
-        status='approved'
-    ).exists()
-
-    if not is_member:
+    if not is_approved_member(request, chat_room):
         return redirect('waiting')
 
     if request.method=='POST':
+        if not is_approved_member(request, chat_room):
+            return HttpResponse("Not Authorised", status=403)
+        
         content = request.POST.get('message')
+
         Message.objects.create(
             room=chat_room,
             user=request.session['username'],
             content=content
         )
+
         return redirect('room')
     
     messages = Message.objects.filter(room=chat_room).order_by('timestamp')
@@ -114,3 +121,45 @@ def room(request):
         'room':chat_room,
         'messages':messages
     })
+
+
+
+def inbox(request):
+    if not request.session.session_key:
+        return redirect('/')
+
+    rooms = Room.objects.filter(
+        owner_session=request.session.session_key
+    )
+
+    if not rooms.exists():
+        return HttpResponse("Not authorized", status=403)
+
+    requests = RoomMember.objects.filter(
+        room__in=rooms,
+        status='pending'
+    )
+
+    return render(request, 'inbox.html', {'requests': requests})
+
+
+def approve(request, member_id):
+    member = RoomMember.objects.get(id=member_id)
+
+    if member.room.owner_session != request.session.session_key:
+        return redirect('/')
+
+    member.status = 'approved'
+    member.save()
+    return redirect('inbox')
+
+
+def reject(request, member_id):
+    member = RoomMember.objects.get(id=member_id)
+
+    if member.room.owner_session != request.session.session_key:
+        return redirect('/')
+
+    member.status = 'rejected'
+    member.save()
+    return redirect('inbox')
