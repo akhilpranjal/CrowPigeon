@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Room, Message
+from .models import Room, Message, RoomMember
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 
@@ -24,12 +24,31 @@ def home(request):
                 password = make_password(password),
                 owner_session = request.session.session_key
             )
-            request.session['room'] = room_name
+
+            RoomMember.objects.create(
+                room=room,
+                username=username,
+                session_key=request.session.session_key,
+                status='approved'
+
+            )
+
+            request.session['room'] = room.name
             return redirect('room')
         else:
             if (check_password(password, room.password)):
+                RoomMember.objects.get_or_create(
+                    room=room,
+                    session_key=request.session.session_key,
+                    defaults={
+                        'username': username,
+                        'status': 'pending'
+                    }
+                )
+
+
                 request.session['room'] = room.name
-                return redirect('room')
+                return redirect('waiting')
             else:
                 return render(request, 'home.html', {
                     'error': 'Wrong room password' 
@@ -43,7 +62,7 @@ def room(request):
 
     if 'username' not in request.session or 'room' not in request.session:
         return redirect('/')
-    print(request.session.items())
+    # print(request.session.items())
 
     chat_room = Room.objects.get(name=request.session['room'])
 
