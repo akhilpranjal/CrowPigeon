@@ -13,3 +13,18 @@ class Message(models.Model):
     user = models.CharField(max_length=100)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+class RoomMember(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    username = models.CharField(max_length=100)
+    session_key = models.CharField(max_length=255)
+    status = models.CharField(
+        max_length=10,
+        choices=[
+            ('pending', 'Pending'),
+            ('approved', 'Approved'),
+            ('rejected', 'Rejected')
+        ],
+        default='pending'
+    )
+    requested_at = models.DateTimeField(auto_now_add=True)
