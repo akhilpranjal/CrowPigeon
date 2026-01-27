@@ -1,9 +1,7 @@
 from django.shortcuts import render, redirect
 from .models import Room, Message, RoomMember
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
-
-# Create your views here.
 
 def is_approved_member(request, room):
     return RoomMember.objects.filter(
@@ -90,29 +88,13 @@ def waiting(request):
 
 
 def room(request):
-
     if 'username' not in request.session or 'room' not in request.session:
         return redirect('/')
-    # print(request.session.items())
 
     chat_room = Room.objects.get(name=request.session['room'])
 
     if not is_approved_member(request, chat_room):
         return redirect('waiting')
-
-    if request.method=='POST':
-        if not is_approved_member(request, chat_room):
-            return HttpResponse("Not Authorised", status=403)
-        
-        content = request.POST.get('message')
-
-        Message.objects.create(
-            room=chat_room,
-            user=request.session['username'],
-            content=content
-        )
-
-        return redirect('room')
     
     messages = Message.objects.filter(room=chat_room).order_by('timestamp')
 
