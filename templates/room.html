@@ -2,18 +2,36 @@
 <html>
   <body>
     <h2>Room: {{room.name}}</h2>
-    <form method="POST">
-      <div>
-        {% for message in messages %}
-        <p><b>{{message.user}}: </b> {{message.content}}</p>
-        {% endfor %}
-      </div>
-      
-      <form method="POST">
-        {% csrf_token %}
-        <input type="text" name="message" placeholder="Type Message">
-        <button type="submit">Send</button>
-      </form>
-    </form>
+    
+    <div id="chat">
+      {% for message in messages %}
+        <p><b>{{message.user}}:</b> {{message.content}}</p>
+      {% endfor %}
+    </div>
+
+    <input id="messageInput" type="text">
+    <button type="button" onclick="sendMessage()">Send</button>
+
+    <script>
+      const socket = new WebSocket(
+        'ws://'+window.location.host+'/ws/chat/'
+      );
+
+      socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const chat = document.getElementById('chat');
+        chat.innerHTML += `<p><b>${data.username}:</b> ${data.message}</p>`;
+      };
+
+      function sendMessage() {
+        const input = document.getElementById('messageInput');
+        if (socket.readyState === WebSocket.OPEN && input.value) {
+          socket.send(JSON.stringify({
+            'message': input.value
+          }));
+          input.value = '';
+        }
+      }
+    </script>
   </body>
 </html>
