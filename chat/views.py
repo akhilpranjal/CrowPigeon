@@ -20,6 +20,7 @@ def home(request):
         username = (request.POST.get('username') or '').strip()
         room_name = (request.POST.get('room') or '').strip()
         password = request.POST.get('password') or ''
+        action = (request.POST.get('action') or 'join').strip().lower()
 
         if not username or not room_name or not password:
             return render(request, 'home.html', {
@@ -28,13 +29,18 @@ def home(request):
 
         request.session['username'] = username
 
-        room = Room.objects.filter(name=room_name).first()
+        if action == 'create':
+            # Check if exact room with this name and password already exists
+            existing_room = Room.objects.filter(name=room_name).filter(password=make_password(password)).first()
+            if existing_room:
+                return render(request, 'home.html', {
+                    'error': 'A room with this name and password already exists. Join it instead.'
+                })
 
-        if room is None:
             room = Room.objects.create(
-                name = room_name,
-                password = make_password(password),
-                owner_session = request.session.session_key
+                name=room_name,
+                password=make_password(password),
+                owner_session=request.session.session_key
             )
 
             RoomMember.objects.create(
@@ -42,27 +48,42 @@ def home(request):
                 username=username,
                 session_key=request.session.session_key,
                 status='approved'
-
             )
 
-            request.session['room'] = room.name
+            request.session['room_id'] = room.id
+            request.session['room_name'] = room.name
             return redirect('room')
-        
-        else:
-            if (check_password(password, room.password)):
-                RoomMember.objects.get_or_create(
-                    room=room,
-                    session_key=request.session.session_key,
-                    defaults={
-                        'username': username,
-                        'status': 'pending'
-                    }
-                )
 
-                request.session['room'] = room.name
-                return redirect('waiting')
-            
-            else:
+        room = Room.objects.filter(name=room_name).first()
+        
+        if room is None:
+            return render(request, 'home.html', {
+                'error': 'Room not found. Create it first or check the room name.'
+            })
+
+        if check_password(password, room.password):
+            member, created = RoomMember.objects.get_or_create(
+                room=room,
+                session_key=request.session.session_key,
+                defaults={
+                    'username': username,
+                    'status': 'pending'
+                }
+            )
+
+            if not created:
+                member.username = username
+                if member.status != 'approved':
+                    member.status = 'pending'
+                member.save(update_fields=['username', 'status'])
+
+            request.session['room_id'] = room.id
+            request.session['room_name'] = room.name
+            if member.status == 'approved':
+                return redirect('room')
+            return redirect('waiting')
+
+        else:
                 return render(request, 'home.html', {
                     'error': 'Wrong room password' 
                 })
@@ -72,12 +93,13 @@ def home(request):
 
 
 def waiting(request):
-    room_name = request.session.get('room')
-    if not room_name:
+    room_id = request.session.get('room_id')
+    if not room_id:
         return redirect('/')
 
-    room = Room.objects.filter(name=room_name).first()
-    if room is None:
+    try:
+        room = Room.objects.get(id=room_id)
+    except Room.DoesNotExist:
         request.session.flush()
         return redirect('/')
 
@@ -100,11 +122,11 @@ def waiting(request):
 
 
 def room(request):
-    if 'username' not in request.session or 'room' not in request.session:
+    if 'username' not in request.session or 'room_id' not in request.session:
         return redirect('/')
-    room_name = request.session['room']
+    room_id = request.session['room_id']
     try:
-        chat_room = Room.objects.get(name=room_name)
+        chat_room = Room.objects.get(id=room_id)
     except Room.DoesNotExist:
         request.session.flush()
         return redirect('/')
@@ -114,11 +136,27 @@ def room(request):
         return redirect('waiting')
     
     messages = Message.objects.filter(room=chat_room).order_by('timestamp')
+    is_owner = chat_room.owner_session == request.session.session_key
+    owner_pending_requests = []
+
+    if is_owner:
+        owner_pending_requests = RoomMember.objects.filter(
+            room=chat_room,
+            status='pending'
+        ).order_by('requested_at')
+
+    approved_members = RoomMember.objects.filter(
+        room=chat_room,
+        status='approved'
+    ).order_by('username')
 
     return render(request, 'room.html', {
         'username':request.session['username'],
         'room':chat_room,
-        'messages':messages
+        'messages':messages,
+        'is_owner': is_owner,
+        'owner_pending_requests': owner_pending_requests,
+        'approved_members': approved_members,
     })
 
 
