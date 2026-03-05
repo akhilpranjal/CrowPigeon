@@ -81,14 +81,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
 
             room = await self.get_room(self.room_name)
-            await self.save_message(room, username, message)
+            saved_message = await self.save_message(room, username, message)
             
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'chat_message',
                     'message': message,
-                    'username': username
+                    'username': username,
+                    'timestamp': saved_message.timestamp.strftime('%H:%M')
                 }
             )
         except Exception:
@@ -97,5 +98,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             'message': event['message'],
-            'username': event['username']
+            'username': event['username'],
+            'timestamp': event.get('timestamp')
         })) 
