@@ -4,7 +4,7 @@ from datetime import datetime
 # Create your models here.
 
 class Room(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     password = models.CharField(max_length=255)
     owner_session = models.CharField(max_length=255)
 
