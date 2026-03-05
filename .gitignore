@@ -28,4 +28,8 @@ staticfiles/
 .coverage
 *.pyc
 
+
+*.bak
+*.dat
+*.dir
 plan.md
