@@ -28,6 +28,4 @@ staticfiles/
 .coverage
 *.pyc
 
-migrations/
-
 plan.md
