@@ -1,7 +1,10 @@
 import json
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Room, Message, RoomMember
+
+logger = logging.getLogger(__name__)
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -33,7 +36,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
             await self.accept()
-        except Exception as e:
+        except Exception:
+            logger.exception('WebSocket connect failed for room %s', self.room_name)
             await self.close()
 
     @database_sync_to_async
@@ -65,7 +69,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
-            message = data['message']
+            message = data.get('message')
+
+            if not isinstance(message, str) or not message.strip():
+                return
             
             session = self.scope.get('session', {})
             username = session.get('username')
@@ -84,8 +91,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'username': username
                 }
             )
-        except Exception as e:
-            pass
+        except Exception:
+            logger.exception('WebSocket receive failed for room %s', self.room_name)
     
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
