@@ -9,15 +9,15 @@ logger = logging.getLogger(__name__)
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         session = self.scope.get('session', {})
-        self.room_name = session.get('room')
-        self.room_group_name = f'chat_{self.room_name}'
+        self.room_id = session.get('room_id')
+        self.room_group_name = f'chat_{self.room_id}'
 
-        if not self.room_name:
+        if not self.room_id:
             await self.close()
             return
         
         try:
-            room = await self.get_room(self.room_name)
+            room = await self.get_room(self.room_id)
             session_key = session.session_key if hasattr(session, 'session_key') else None
             
             if not session_key:
@@ -37,12 +37,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             await self.accept()
         except Exception:
-            logger.exception('WebSocket connect failed for room %s', self.room_name)
+            logger.exception('WebSocket connect failed for room %d', self.room_id)
             await self.close()
 
     @database_sync_to_async
-    def get_room(self, room_name):
-        return Room.objects.get(name=room_name)
+    def get_room(self, room_id):
+        return Room.objects.get(id=room_id)
     
     @database_sync_to_async
     def check_membership(self, room, session_key):
@@ -80,7 +80,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not username:
                 return
 
-            room = await self.get_room(self.room_name)
+            room = await self.get_room(self.room_id)
             saved_message = await self.save_message(room, username, message)
             
             await self.channel_layer.group_send(
@@ -93,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             )
         except Exception:
-            logger.exception('WebSocket receive failed for room %s', self.room_name)
+            logger.exception('WebSocket receive failed for room %d', self.room_id)
     
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
