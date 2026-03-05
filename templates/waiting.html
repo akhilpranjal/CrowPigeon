@@ -1,16 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Waiting for Approval</title>
+{% extends "base.html" %}
+
+{% block title %}CrowPigeon | Waiting{% endblock %}
+
+{% block head %}
     <meta http-equiv="refresh" content="5">
-</head>
-<body>
-    {% if rejected %}
-        <h2>Your request was rejected.</h2>
-        <a href="/">Go Home</a>
-    {% else %}
-        <h2>Waiting for room owner approval...</h2>
-        <p>This page refreshes every 5 seconds.</p>
-    {% endif %}
-</body>
-</html>
+{% endblock %}
+
+{% block page_decor %}
+    <div class="backdrop-orb backdrop-orb-small" aria-hidden="true"></div>
+{% endblock %}
+
+{% block content %}
+    <section class="status-wrap">
+      <article class="status-card">
+        {% if rejected %}
+            <p class="eyebrow">Request Status</p>
+            <h1>Access Request Rejected</h1>
+            <p class="status-text">The room owner declined your request for now. You can return home and try again later.</p>
+            <p class="status-warning">Your access was not approved.</p>
+            <div class="button-row">
+                <a class="btn btn-secondary" href="/">Return Home</a>
+            </div>
+        {% else %}
+            <p class="eyebrow">Approval Queue</p>
+            <h1>Waiting for room owner approval...</h1>
+            <p class="status-text">You will enter the chat automatically when approved.</p>
+            <div class="loader-row" aria-hidden="true">
+              <span class="loader-dot"></span>
+              <span class="loader-dot"></span>
+              <span class="loader-dot"></span>
+            </div>
+            <p class="refresh-note">Auto-refreshing every 5 seconds.</p>
+        {% endif %}
+      </article>
+    </section>
+{% endblock %}

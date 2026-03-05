@@ -1,26 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Inbox</title>
-</head>
-<body>
-    <h2>Join Requests</h2>
+{% extends "base.html" %}
 
-    {% if requests %}
-        <ul>
-            {% for req in requests %}
-                <li>
-                    <b>{{ req.username }}</b> wants to join <b>{{ req.room.name }}</b>
-                    <br>
-                    <a href="{% url 'approve' req.id %}">Approve</a> |
-                    <a href="{% url 'reject' req.id %}">Reject</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No pending requests.</p>
-    {% endif %}
+{% block title %}CrowPigeon | Inbox{% endblock %}
 
-    <a href="/">Home</a>
-</body>
-</html>
+{% block page_decor %}
+    <div class="backdrop-orb backdrop-orb-right" aria-hidden="true"></div>
+{% endblock %}
+
+{% block content %}
+    <section class="inbox-wrap">
+        <header class="inbox-header">
+            <p class="eyebrow">Owner Inbox</p>
+            <h1>Join Requests</h1>
+            <p>Review pending room requests and approve or reject access.</p>
+        </header>
+
+        {% if requests %}
+            <ul class="request-list" aria-label="Pending room access requests">
+                {% for req in requests %}
+                    <li class="request-item">
+                        <div class="request-item-top">
+                            <p class="request-user">{{ req.username }}</p>
+                            <p class="request-room">{{ req.room.name }}</p>
+                        </div>
+                        <div class="button-row">
+                            <form method="post" action="{% url 'approve' req.id %}">
+                                {% csrf_token %}
+                                <button class="btn btn-success" type="submit">Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'reject' req.id %}">
+                                {% csrf_token %}
+                                <button class="btn btn-danger" type="submit">Reject</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-note">No pending requests right now.</p>
+        {% endif %}
+
+        <div class="button-row">
+            <a href="/" class="btn btn-secondary">Back Home</a>
+        </div>
+    </section>
+{% endblock %}

@@ -1,37 +1,121 @@
-<!DOCTYPE html>
-<html>
-  <body>
-    <h2>Room: {{room.name}}</h2>
-    
-    <div id="chat">
-      {% for message in messages %}
-        <p><b>{{message.user}}:</b> {{message.content}}</p>
-      {% endfor %}
+{% extends "base.html" %}
+
+{% block title %}CrowPigeon | Room {{ room.name }}{% endblock %}
+
+{% block page_decor %}
+  <div class="backdrop-orb backdrop-orb-chat" aria-hidden="true"></div>
+{% endblock %}
+
+{% block content %}
+  <section class="room-layout">
+    <aside class="room-sidebar" aria-label="Room details">
+      <div class="sidebar-section">
+        <p class="eyebrow">Room</p>
+        <h1 class="sidebar-room-name">{{ room.name }}</h1>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-head-row">
+          <h2>Members</h2>
+          <span class="sidebar-count">{{ approved_members|length }}</span>
+        </div>
+
+        <ul class="member-list">
+          {% for member in approved_members %}
+            <li class="member-item{% if member.username == username %} member-item-self{% endif %}">
+              {{ member.username }}{% if member.username == username %} (you){% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      {% if is_owner %}
+        <div class="sidebar-section">
+          <a href="{% url 'inbox' %}" class="btn btn-secondary sidebar-btn">Inbox ({{ owner_pending_requests|length }})</a>
+        </div>
+      {% endif %}
+    </aside>
+
+    <div class="chat-panel">
+      <header class="chat-panel-head">
+        <div>
+          <p class="eyebrow">Secure Chat</p>
+          <h2>Messages</h2>
+        </div>
+      </header>
+
+      <div id="chat" class="chat-feed" role="log" aria-live="polite" aria-label="Chat messages">
+        {% for message in messages %}
+          <article class="chat-msg {% if message.user == username %}chat-msg-own{% endif %}">
+            <div class="chat-meta">
+              <p class="chat-user">{{ message.user }}</p>
+              <p class="chat-time">{{ message.timestamp|date:"H:i" }}</p>
+            </div>
+            <p class="chat-content">{{ message.content }}</p>
+          </article>
+        {% empty %}
+          <p class="chat-empty">No messages yet. Start the conversation.</p>
+        {% endfor %}
+      </div>
+
+      <div class="composer">
+        <label for="messageInput" class="sr-only">Type a message</label>
+        <input id="messageInput" class="field-input" type="text" placeholder="Type a message" autocomplete="off">
+        <button class="btn btn-primary" type="button" onclick="sendMessage()">Send</button>
+      </div>
     </div>
+  </section>
 
-    <input id="messageInput" type="text">
-    <button type="button" onclick="sendMessage()">Send</button>
+  <script>
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(wsProtocol + window.location.host + '/ws/chat/');
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('messageInput');
 
-    <script>
-      const socket = new WebSocket(
-        'ws://'+window.location.host+'/ws/chat/'
+    function escapeHtml(unsafeText) {
+      return unsafeText
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function nowTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    function appendMessage(username, message, timestamp) {
+      const ownClass = username === "{{ username|escapejs }}" ? ' chat-msg-own' : '';
+      chat.insertAdjacentHTML(
+        'beforeend',
+        `<article class="chat-msg${ownClass}"><div class="chat-meta"><p class="chat-user">${escapeHtml(username)}</p><p class="chat-time">${escapeHtml(timestamp || nowTime())}</p></div><p class="chat-content">${escapeHtml(message)}</p></article>`
       );
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-      socket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        const chat = document.getElementById('chat');
-        chat.innerHTML += `<p><b>${data.username}:</b> ${data.message}</p>`;
-      };
+    socket.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      appendMessage(data.username, data.message, data.timestamp);
+    };
 
-      function sendMessage() {
-        const input = document.getElementById('messageInput');
-        if (socket.readyState === WebSocket.OPEN && input.value) {
-          socket.send(JSON.stringify({
-            'message': input.value
-          }));
-          input.value = '';
-        }
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
       }
-    </script>
-  </body>
-</html>
+    });
+
+    function sendMessage() {
+      if (socket.readyState === WebSocket.OPEN && input.value.trim()) {
+        socket.send(JSON.stringify({
+          message: input.value.trim()
+        }));
+        input.value = '';
+      }
+    }
+
+    chat.scrollTop = chat.scrollHeight;
+  </script>
+{% endblock %}

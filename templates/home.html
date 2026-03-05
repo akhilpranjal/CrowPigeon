@@ -1,19 +1,43 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Home</title>
-  </head>
-  <body>
-    <h1>Welcome to CrowPigeon</h1>
-    <form method="POST">
-      {% csrf_token %}
-      <label >Username</label>
-      <input type="text" name="username" placeholder="Username">
-      <label >Room Name</label>
-      <input type="text" name="room" placeholder="Room Name">
-      <label >Password</label>
-      <input type="password" name="password" placeholder="Room Password" required>
-      <button type="submit">Enter</button>
-    </form>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}CrowPigeon | Enter Room{% endblock %}
+
+{% block page_decor %}
+  <div class="backdrop-orb" aria-hidden="true"></div>
+{% endblock %}
+
+{% block content %}
+  <section class="auth-wrap">
+    <article class="auth-card">
+      <header class="auth-header">
+        <p class="eyebrow">Secure Private Rooms</p>
+        <h1>Welcome to CrowPigeon</h1>
+        <p>Create a room or join an existing one. Owners approve each user before chat access is granted.</p>
+      </header>
+
+      <form method="POST" class="form-grid" aria-label="Join chat room form">
+        {% csrf_token %}
+        <div>
+          <label class="field-label" for="username">Username</label>
+          <input class="field-input" id="username" type="text" name="username" placeholder="e.g. akhil" autocomplete="username" required>
+        </div>
+        <div>
+          <label class="field-label" for="room">Room Name</label>
+          <input class="field-input" id="room" type="text" name="room" placeholder="e.g. engineering-war-room" required>
+        </div>
+        <div>
+          <label class="field-label" for="password">Room Password</label>
+          <input class="field-input" id="password" type="password" name="password" placeholder="Enter room password" required>
+        </div>
+        <div class="button-row button-row-split">
+          <button class="btn btn-primary" type="submit" name="action" value="create">Create Room</button>
+          <button class="btn btn-secondary" type="submit" name="action" value="join">Join Room</button>
+        </div>
+      </form>
+
+      {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}
