@@ -33,3 +33,11 @@ staticfiles/
 *.dat
 *.dir
 plan.md
+
+pip-wheel-metadata/
+build/ 
+dist/
+*.egg-info/
+.python-version
+local_settings.py
+.cache/
