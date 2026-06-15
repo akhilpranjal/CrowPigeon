@@ -40,7 +40,11 @@
         {% endif %}
 
         <div class="button-row">
-            <a href="/" class="btn btn-secondary">Back Home</a>
+            {% if current_room %}
+                <a href="{% url 'room' %}" class="btn btn-secondary">Back to Room</a>
+            {% else %}
+                <a href="/" class="btn btn-secondary">Back Home</a>
+            {% endif %}
         </div>
     </section>
 {% endblock %}

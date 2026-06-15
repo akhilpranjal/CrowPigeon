@@ -16,6 +16,31 @@ def home(request):
     if not request.session.session_key:
         request.session.create()
 
+    if request.method != "POST":
+        room_id = request.session.get('room_id')
+        username = request.session.get('username')
+
+        if room_id and username:
+            try:
+                room = Room.objects.get(id=room_id)
+            except Room.DoesNotExist:
+                request.session.flush()
+                return render(request, 'home.html')
+
+            member = RoomMember.objects.filter(
+                room=room,
+                session_key=request.session.session_key,
+            ).first()
+
+            if member is None:
+                request.session.flush()
+                return render(request, 'home.html')
+
+            if member.status == 'approved':
+                return redirect('room')
+            if member.status in {'pending', 'rejected'}:
+                return redirect('waiting')
+
     if request.method == "POST":
         username = (request.POST.get('username') or '').strip()
         room_name = (request.POST.get('room') or '').strip()
@@ -172,12 +197,20 @@ def inbox(request):
     if not rooms.exists():
         return HttpResponse("Not authorized", status=403)
 
+    current_room = None
+    room_id = request.session.get('room_id')
+    if room_id:
+        current_room = rooms.filter(id=room_id).first()
+
     requests = RoomMember.objects.filter(
         room__in=rooms,
         status='pending'
     )
 
-    return render(request, 'inbox.html', {'requests': requests})
+    return render(request, 'inbox.html', {
+        'requests': requests,
+        'current_room': current_room,
+    })
 
 
 @require_POST
