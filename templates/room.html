@@ -23,7 +23,8 @@
         <ul class="member-list">
           {% for member in approved_members %}
             <li class="member-item{% if member.username == username %} member-item-self{% endif %}">
-              {{ member.username }}{% if member.username == username %} (you){% endif %}
+              <span class="member-avatar">{{ member.username|make_list|first|upper }}</span>
+              {{ member.username }}{% if member.username == username %} <span class="member-you-tag">(you)</span>{% endif %}
             </li>
           {% endfor %}
         </ul>
@@ -31,9 +32,18 @@
 
       {% if is_owner %}
         <div class="sidebar-section">
-          <a href="{% url 'inbox' %}" class="btn btn-secondary sidebar-btn">Inbox ({{ owner_pending_requests|length }})</a>
+          <a href="{% url 'inbox' %}" class="btn btn-secondary sidebar-btn" id="inboxBtn">
+            Inbox <span id="inboxBadge" class="inbox-badge{% if owner_pending_requests|length > 0 %} inbox-badge-active{% endif %}">{{ owner_pending_requests|length }}</span>
+          </a>
         </div>
       {% endif %}
+
+      <div class="sidebar-section sidebar-section-bottom">
+        <a href="{% url 'leave_room' %}" class="btn btn-ghost sidebar-btn" id="leaveBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Leave Room
+        </a>
+      </div>
     </aside>
 
     <div class="chat-panel">
@@ -47,11 +57,9 @@
       <div id="chat" class="chat-feed" role="log" aria-live="polite" aria-label="Chat messages">
         {% for message in messages %}
           <article class="chat-msg {% if message.user == username %}chat-msg-own{% endif %}">
-            <div class="chat-meta">
-              <p class="chat-user">{{ message.user }}</p>
-              <p class="chat-time">{{ message.timestamp|date:"H:i" }}</p>
-            </div>
-            <p class="chat-content">{{ message.content }}</p>
+            <span class="chat-user">{{ message.user }}</span>
+            <span class="chat-content">{{ message.content }}</span>
+            <span class="chat-time">{{ message.timestamp|date:"H:i" }}</span>
           </article>
         {% empty %}
           <p class="chat-empty">No messages yet. Start the conversation.</p>
@@ -60,8 +68,10 @@
 
       <div class="composer">
         <label for="messageInput" class="sr-only">Type a message</label>
-        <input id="messageInput" class="field-input" type="text" placeholder="Type a message" autocomplete="off">
-        <button class="btn btn-primary" type="button" onclick="sendMessage()">Send</button>
+        <input id="messageInput" class="field-input" type="text" placeholder="Type a message…" autocomplete="off">
+        <button class="btn btn-primary btn-send" type="button" onclick="sendMessage()" aria-label="Send message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
     </div>
   </section>
@@ -71,6 +81,7 @@
     const socket = new WebSocket(wsProtocol + window.location.host + '/ws/chat/');
     const chat = document.getElementById('chat');
     const input = document.getElementById('messageInput');
+    const isOwner = JSON.parse('{{ is_owner|yesno:"true,false" }}');
 
     function escapeHtml(unsafeText) {
       return unsafeText
@@ -88,16 +99,37 @@
 
     function appendMessage(username, message, timestamp) {
       const ownClass = username === "{{ username|escapejs }}" ? ' chat-msg-own' : '';
-      chat.insertAdjacentHTML(
-        'beforeend',
-        `<article class="chat-msg${ownClass}"><div class="chat-meta"><p class="chat-user">${escapeHtml(username)}</p><p class="chat-time">${escapeHtml(timestamp || nowTime())}</p></div><p class="chat-content">${escapeHtml(message)}</p></article>`
-      );
+      const article = document.createElement('article');
+      article.className = 'chat-msg chat-msg-enter' + ownClass;
+      article.innerHTML =
+        `<span class="chat-user">${escapeHtml(username)}</span>` +
+        `<span class="chat-content">${escapeHtml(message)}</span>` +
+        `<span class="chat-time">${escapeHtml(timestamp || nowTime())}</span>`;
+      chat.appendChild(article);
       chat.scrollTop = chat.scrollHeight;
     }
 
     socket.onmessage = function (event) {
       const data = JSON.parse(event.data);
-      appendMessage(data.username, data.message, data.timestamp);
+
+      // Handle pending-count updates for inbox badge
+      if (data.type === 'pending_count' && isOwner) {
+        const badge = document.getElementById('inboxBadge');
+        if (badge) {
+          badge.textContent = data.count;
+          if (data.count > 0) {
+            badge.classList.add('inbox-badge-active');
+          } else {
+            badge.classList.remove('inbox-badge-active');
+          }
+        }
+        return;
+      }
+
+      // Normal chat message
+      if (data.message) {
+        appendMessage(data.username, data.message, data.timestamp);
+      }
     };
 
     input.addEventListener('keydown', function (event) {
