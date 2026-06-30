@@ -100,4 +100,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': event['message'],
             'username': event['username'],
             'timestamp': event.get('timestamp')
-        })) 
+        }))
+
+    async def pending_count(self, event):
+        """Push updated pending-request count to connected clients."""
+        await self.send(text_data=json.dumps({
+            'type': 'pending_count',
+            'count': event['count'],
+        }))
