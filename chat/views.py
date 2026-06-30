@@ -3,6 +3,8 @@ from .models import Room, Message, RoomMember
 from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.views.decorators.http import require_POST
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 def is_approved_member(request, room):
     return RoomMember.objects.filter(
@@ -55,11 +57,10 @@ def home(request):
         request.session['username'] = username
 
         if action == 'create':
-            # Check if exact room with this name and password already exists
-            existing_room = Room.objects.filter(name=room_name).filter(password=make_password(password)).first()
-            if existing_room:
+            # Room names are unique (case-insensitive)
+            if Room.objects.filter(name__iexact=room_name).exists():
                 return render(request, 'home.html', {
-                    'error': 'A room with this name and password already exists. Join it instead.'
+                    'error': 'A room with this name already exists. Try joining it instead.'
                 })
 
             room = Room.objects.create(
@@ -104,6 +105,24 @@ def home(request):
 
             request.session['room_id'] = room.id
             request.session['room_name'] = room.name
+
+            # Notify room owner in real-time about pending request count
+            if member.status == 'pending':
+                pending_count = RoomMember.objects.filter(
+                    room=room, status='pending'
+                ).count()
+                try:
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        f'chat_{room.id}',
+                        {
+                            'type': 'pending_count',
+                            'count': pending_count,
+                        }
+                    )
+                except Exception:
+                    pass  # Non-critical; badge will update on next page load
+
             if member.status == 'approved':
                 return redirect('room')
             return redirect('waiting')
@@ -239,3 +258,10 @@ def reject(request, member_id):
     member.status = 'rejected'
     member.save()
     return redirect('inbox')
+
+
+def leave_room(request):
+    """Clear room session data and redirect to home."""
+    for key in ('room_id', 'room_name', 'username'):
+        request.session.pop(key, None)
+    return redirect('home')
