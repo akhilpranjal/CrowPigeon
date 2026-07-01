@@ -1,42 +1,41 @@
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
-# Virtual env
+# Virtual environments
 myvenv/
 env/
 .venv/
 
-# Django stuff
+# Django
 *.log
 media/
 staticfiles/
 
-# Environment variables
+# Environment variables (secrets)
 .env
 
-# IDE / OS files
+# IDE / OS
 .vscode/
 .idea/
 .DS_Store
 
-# Test / type hints cache
+# Testing & type-checking
 .pytest_cache/
 .mypy_cache/
 .coverage
-*.pyc
 
-
-*.bak
-*.dat
-*.dir
-plan.md
-
+# Build artifacts
 pip-wheel-metadata/
-build/ 
+build/
 dist/
 *.egg-info/
+
+# Misc
 .python-version
 local_settings.py
 .cache/
+screenshots/
+*.png
