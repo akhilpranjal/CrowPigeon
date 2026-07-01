@@ -29,17 +29,15 @@ There are no user accounts. Identity is tied to the browser session — pick a u
 
 | Dependency | Role |
 |---|---|
+| [Python 3.12](https://www.python.org/) | Runtime environment |
 | [Django 5.2](https://docs.djangoproject.com/en/5.2/) | Web framework, ORM, sessions, CSRF, password hashing |
-| [Django Channels 4.3](https://channels.readthedocs.io/) | WebSocket protocol support via ASGI |
 | [Daphne](https://github.com/django/daphne) | ASGI server used in development and production |
+| [Django Channels 4.3](https://channels.readthedocs.io/) | WebSocket protocol support via ASGI |
 | [Redis](https://redis.io/) (via [redis-py](https://github.com/redis/redis-py)) | Channel layer backend and custom job queue |
-| [Twisted](https://twistedmatrix.com/) | Async networking layer underneath Daphne |
 | [WhiteNoise](https://whitenoise.readthedocs.io/) | Serves static files directly from the ASGI app with compression |
-| [psycopg2](https://www.psycopg.org/) | PostgreSQL adapter |
+| [psycopg (v3) / psycopg-binary](https://www.psycopg.org/psycopg3/) | Modern PostgreSQL adapter |
 | [python-dotenv](https://github.com/theskumar/python-dotenv) | Loads `.env` variables into `os.environ` |
-| [Gunicorn](https://gunicorn.org/) | Production WSGI/ASGI process manager |
-| [Inter](https://fonts.google.com/specimen/Inter) (Google Fonts) | Primary UI typeface |
-| [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono) (Google Fonts) | Monospace font for timestamps |
+| [uvicorn](https://www.uvicorn.org/) | Production ASGI server |
 
 ## Project Structure
 
