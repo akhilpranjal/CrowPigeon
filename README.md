@@ -33,11 +33,13 @@ There are no user accounts. Identity is tied to the browser session - pick a use
 | [Django 5.2](https://docs.djangoproject.com/en/5.2/) | Web framework, ORM, sessions, CSRF, password hashing |
 | [Daphne](https://github.com/django/daphne) | Development ASGI server |
 | [Django Channels 4.3](https://channels.readthedocs.io/) | WebSocket protocol support via ASGI |
+| [channels-redis](https://github.com/django/channels_redis) | Redis channel layer backend for Django Channels |
 | [Redis](https://redis.io/) (via [redis-py](https://github.com/redis/redis-py)) | Channel layer backend and custom job queue |
 | [WhiteNoise](https://whitenoise.readthedocs.io/) | Serves static files directly from the ASGI app with compression |
 | [psycopg (v3) / psycopg-binary](https://www.psycopg.org/psycopg3/) | Modern PostgreSQL adapter |
 | [python-dotenv](https://github.com/theskumar/python-dotenv) | Loads `.env` variables into `os.environ` |
 | [uvicorn](https://www.uvicorn.org/) | Production ASGI server |
+| [websockets](https://github.com/python-websockets/websockets) | WebSocket protocol handler library for Uvicorn |
 
 ## Project Structure
 
