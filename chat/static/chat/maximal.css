@@ -1,3 +1,23 @@
+/*
+ * CrowPigeon — Main Stylesheet
+ *
+ * Table of Contents:
+ *   1. Design Tokens (CSS variables)
+ *   2. Base / Reset
+ *   3. Layout (page-shell, container, backdrop orbs)
+ *   4. Typography helpers (eyebrow)
+ *   5. Auth & Status cards (home, waiting pages)
+ *   6. Form elements (inputs, labels)
+ *   7. Buttons
+ *   8. Inbox (owner join-request list)
+ *   9. Room layout (sidebar + chat panel)
+ *  10. Chat messages & composer
+ *  11. Scrollbars
+ *  12. Accessibility (sr-only, skip-link)
+ *  13. Animations (blink, badge-pulse, msg-fade-in)
+ *  14. Responsive breakpoints
+ */
+
 :root {
   --bg: #0f1117;
   --bg-elevated: #171b24;
@@ -466,6 +486,16 @@ a {
   width: 100%;
 }
 
+/* ── Owner crown icon ── */
+
+.member-owner-crown {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  margin-left: 0.15rem;
+  flex-shrink: 0;
+}
+
 /* Inbox badge */
 .inbox-badge {
   display: inline-flex;
@@ -502,7 +532,7 @@ a {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
 }
 
@@ -571,6 +601,16 @@ a {
 
 .chat-msg-own .chat-user {
   color: #82aadf;
+}
+
+/* ── Owner crown in chat ── */
+
+.chat-owner-crown {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+  vertical-align: middle;
 }
 
 .chat-content {

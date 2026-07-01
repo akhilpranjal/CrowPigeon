@@ -7,6 +7,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env file
 load_dotenv()
 
+# ---------------------------------------------------------------------------
+# Core
+# ---------------------------------------------------------------------------
+
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-only-insecure-key-change-me')
 DEBUG = os.getenv('DEBUG', 'False').strip().lower() in ('1', 'true', 'yes', 'on')
 
@@ -15,7 +19,15 @@ ALLOWED_HOSTS = [
     for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     if host.strip()
 ]
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+
+# ---------------------------------------------------------------------------
+# Installed apps & middleware
+# ---------------------------------------------------------------------------
 
 INSTALLED_APPS = [
     'daphne',
@@ -42,10 +54,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'CrowPigeon.urls'
 
+# ---------------------------------------------------------------------------
+# Templates
+# ---------------------------------------------------------------------------
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR/'templates'],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -57,8 +73,16 @@ TEMPLATES = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# ASGI / WSGI
+# ---------------------------------------------------------------------------
+
 ASGI_APPLICATION = 'CrowPigeon.asgi.application'
 WSGI_APPLICATION = 'CrowPigeon.wsgi.application'
+
+# ---------------------------------------------------------------------------
+# Channel layers (WebSocket backend)
+# ---------------------------------------------------------------------------
 
 if os.getenv('CHANNEL_LAYER_BACKEND', '').lower() == 'redis':
     CHANNEL_LAYERS = {
@@ -72,9 +96,13 @@ if os.getenv('CHANNEL_LAYER_BACKEND', '').lower() == 'redis':
 else:
     CHANNEL_LAYERS = {
         'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
         }
     }
+
+# ---------------------------------------------------------------------------
+# Database
+# ---------------------------------------------------------------------------
 
 DATABASES = {
     'default': {
@@ -86,19 +114,32 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '5432'),
         'OPTIONS': {
             'sslmode': 'require',
-        }
+        },
     }
 }
+
+# ---------------------------------------------------------------------------
+# Internationalization
+# ---------------------------------------------------------------------------
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# ---------------------------------------------------------------------------
+# Static files
+# ---------------------------------------------------------------------------
+
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ---------------------------------------------------------------------------
+# Security & sessions
+# ---------------------------------------------------------------------------
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'

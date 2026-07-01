@@ -10,7 +10,6 @@
 <section class="room-layout">
   <aside class="room-sidebar" aria-label="Room details">
     <div class="sidebar-section">
-      <p class="eyebrow">Room</p>
       <h1 class="sidebar-room-name">{{ room.name }}</h1>
     </div>
 
@@ -24,7 +23,7 @@
         {% for member in approved_members %}
         <li class="member-item{% if member.username == username %} member-item-self{% endif %}">
           <span class="member-avatar">{{ member.username|make_list|first|upper }}</span>
-          {{ member.username }}{% if member.username == username %} <span class="member-you-tag">(you)</span>{% endif %}
+          {{ member.username }}{% if member.username == owner_username %} <span class="member-owner-crown" title="Room Owner"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 19h20l-2-9-5 4-3-6-3 6-5-4-2 9z"/></svg></span>{% endif %}{% if member.username == username %} <span class="member-you-tag">(you)</span>{% endif %}
         </li>
         {% endfor %}
       </ul>
@@ -52,17 +51,12 @@
   </aside>
 
   <div class="chat-panel">
-    <header class="chat-panel-head">
-      <div>
-        <p class="eyebrow">Secure Chat</p>
-        <h2>Messages</h2>
-      </div>
-    </header>
+
 
     <div id="chat" class="chat-feed" role="log" aria-live="polite" aria-label="Chat messages">
       {% for message in messages %}
       <article class="chat-msg {% if message.user == username %}chat-msg-own{% endif %}">
-        <span class="chat-user">{{ message.user }}</span>
+        <span class="chat-user">{{ message.user }}{% if message.user == owner_username %}<span class="chat-owner-crown" title="Room Owner"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 19h20l-2-9-5 4-3-6-3 6-5-4-2 9z"/></svg></span>{% endif %}</span>
         <span class="chat-content">{{ message.content }}</span>
         <span class="chat-time">{{ message.timestamp|date:"H:i" }}</span>
       </article>
@@ -91,6 +85,7 @@
   const chat = document.getElementById('chat');
   const input = document.getElementById('messageInput');
   const isOwner = {{ is_owner|yesno:"true,false" }};
+  const ownerUsername = "{{ owner_username|escapejs }}";
 
   function escapeHtml(unsafeText) {
     return unsafeText
@@ -108,10 +103,11 @@
 
   function appendMessage(username, message, timestamp) {
     const ownClass = username === "{{ username|escapejs }}" ? ' chat-msg-own' : '';
+    const crownIcon = username === ownerUsername ? '<span class="chat-owner-crown" title="Room Owner"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 19h20l-2-9-5 4-3-6-3 6-5-4-2 9z"/></svg></span>' : '';
     const article = document.createElement('article');
     article.className = 'chat-msg chat-msg-enter' + ownClass;
     article.innerHTML =
-      `<span class="chat-user">${escapeHtml(username)}</span>` +
+      `<span class="chat-user">${escapeHtml(username)}${crownIcon}</span>` +
       `<span class="chat-content">${escapeHtml(message)}</span>` +
       `<span class="chat-time">${escapeHtml(timestamp || nowTime())}</span>`;
     chat.appendChild(article);
