@@ -90,7 +90,7 @@
   const socket = new WebSocket(wsProtocol + window.location.host + '/ws/chat/');
   const chat = document.getElementById('chat');
   const input = document.getElementById('messageInput');
-  const isOwner = {{ is_owner| yes, no: "true,false" }};
+  const isOwner = {{ is_owner|yesno:"true,false" }};
 
   function escapeHtml(unsafeText) {
     return unsafeText
