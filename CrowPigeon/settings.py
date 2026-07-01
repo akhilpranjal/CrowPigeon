@@ -85,11 +85,15 @@ WSGI_APPLICATION = 'CrowPigeon.wsgi.application'
 # ---------------------------------------------------------------------------
 
 if os.getenv('CHANNEL_LAYER_BACKEND', '').lower() == 'redis':
+    redis_url = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')
+    if redis_url.startswith('rediss://') and 'ssl_cert_reqs' not in redis_url:
+        separator = '&' if '?' in redis_url else '?'
+        redis_url = f"{redis_url}{separator}ssl_cert_reqs=none"
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                'hosts': [os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')],
+                'hosts': [redis_url],
             },
         }
     }
